@@ -1,0 +1,29 @@
+doctype html
+html(lang='en')
+  head
+    title Home
+  body
+    div
+      form(method='post',action='http://localhost:3000/users/login')
+        div
+         p
+          label
+            b Username &nbsp;
+          input(type='text', placeholder='Enter Email', name='email', required='')
+          br
+
+         p
+          label
+            b Password &nbsp;
+          input(type='password', placeholder='Enter Password', name='password', required='')
+          br
+
+         p
+          button(type='submit') Login &nbsp;
+          a(href='http://localhost:3000/users/forgotpassword/show') ForgotPassword?
+          br
+
+      div
+      form(action='http://localhost:3000/users/signup/show')
+        div
+          button(type ='submit1') SignUp

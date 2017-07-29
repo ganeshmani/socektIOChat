@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 80%; }
+      #error { position: absolute;bottom: 50px;}
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #status { list-style-type: none; margin: 0; right:250px;  padding-bottom: 40px; width: 80%; height : 150px;position: fixed;overflow-y: scroll; }
+      #status li { padding: 5px 10px; color : red; }
+      #status li:nth-child(odd) { background: #eee; }
+      #messages { list-style-type: none; margin-bottom: 40px;right:250px;    width: 80%; height : 70%;position: fixed;overflow-y: scroll; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #userlist { list-style-type: none; margin: 0; position: fixed; bottom : 0; padding: 0; left: 85%; width: 20%; }
+      #userlist li { padding: 5px 10px; }
+      .wrapper { width :100%; }
+      #userlist li:hover { background-color: #380606 !important; }
+
+      .circle:before {
+        content: ' \25CF';
+        font-size: 20px;
+        float : right;
+      }
+
+
+    </style>
+  </head>
+  <body>
+
+
+  <nav class="navbar navbar-right ">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <p id="name"></p>
+      </div>
+      <ul class="nav navbar-nav">
+        <li><a href="http://localhost:3000/users/logout">Log Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <ul id="status"></ul>
+
+    <h3 id="msgusername" style="margin-top: 150px;right:250px; width: 100%; height : 70%; background-color:blue; text-align:center;"></h3>
+    <ul id="messages"></ul>
+
+
+    <div id="error">
+      <p id="errormsg"></p>
+    </div>
+    <ul id="userlist"></ul>
+  </div>
+
+  <form action="">
+    <input id="m" autocomplete="off" /><button>Send</button>
+  </form>
+
+
+    <script src="http://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+    <script>
+      $(function () {
+
+        var userName = "";
+        var me = "";
+       $('#error').hide();
+        var socket = io();
+        $('form').hide();
+        socket.on('usernames',function(data){
+                $('#userlist').empty();
+                 data.forEach(function(e){
+                    var txt1 = $('<span class="circle"></span>');
+                  $('#userlist').append($('<li>').append(e,txt1)); //.text(e));
+              });
+         });
+
+         socket.on('username load',function(name){
+             console.log(name);
+             $('#name').text("Welcome "+name);
+             $('#name').css('margin-top','18px');
+         });
+
+         $('#userlist').mouseover(function(){
+             $('#userlist').css( 'cursor', 'pointer' );
+             //$('#userlist li').css('background-color','red');
+         });
+
+         $('#userlist').on('click','li',function(){
+           $('form').show();
+             //alert($(this).text());
+             userName = $(this).text();
+
+             socket.emit('user load',$(this).text());
+         });
+
+         socket.on('user load',function(room){
+              //alert(userName);
+              $('#msgusername').text(userName);
+              socket.emit('oldchathistory',{ roomid : room,username : userName });
+         });
+
+         socket.on('load user',function(msg){
+            //alert(msg);
+         });
+         socket.on('typing alert',function(msg){
+             $('#error').show();
+             //alert(msg);
+             $('#errormsg').text(msg);
+             setTime = setTimeout(function(){
+                $('#errormsg').text("");
+             },3500);
+             //$('msg').appendTo('#errormsg');
+         });
+
+         socket.on('status message',function(msg){
+           console.log(msg);
+           $('#status').append($('<li>').append(msg));
+            // $('#status').animate({scrollTop: $('#status').prop("scrollHeight")}, 800);
+             $('#status').scrollTop($('#status').prop("status"));
+         });
+
+        $("#m").keyup(function(e){
+          if($('#m').val()){
+            socket.emit('typing alert');
+
+
+          }else{
+             $('#error').hide();
+          }
+
+        });
+
+
+        /*var user = prompt('Enter your name');
+        if(user != null){
+          socket.emit('user',user);
+        }*/
+
+        $('form').submit(function(){
+          $('#error').hide();
+          socket.emit('chat message', { msg: $('#m').val(),date:Date.now()  } );
+          $('#m').val('');
+          return false;
+        });
+        socket.on('chat message', function(data){
+
+          if(data.user == userName){
+            var chatDate = moment(data.date).format("MMMM Do YYYY, hh:mm:ss a");
+           var txt1 = $('<span></span>').text(data.user+" : ").css({"color":"#006080"});
+           var txt2 = $('<span></span>').text(chatDate).css({"float":"right","color":"#a6a6a6","font-size":"16px"});
+           var txt3 = $('<p></p>').append(txt1,txt2);
+           var txt4 = $('<p></p>').text(data.msg).css({"color":"#000000"});
+           //var msg = '<li style=" float : right; ">'+data.msg+'</li>';
+          }
+          else{
+            var chatDate = moment(data.date).format("MMMM Do YYYY, hh:mm:ss a");
+           var txt1 = $('<span></span>').text(data.user+" : ").css({"color":"#006080"});
+           var txt2 = $('<span></span>').text(chatDate).css({"float":"right","color":"#a6a6a6","font-size":"16px"});
+           var txt3 = $('<p></p>').append(txt1,txt2);
+           var txt4 = $('<p></p>').text(data.msg).css({"color":"#000000"});
+            //var msg = '<li style=" float : left; ">'+data.msg+'</li>';
+          }
+           //alert(msg);
+           $('#messages').append($('<li>').append(txt3,txt4));
+             $('#messages').scrollTop($('#messages').prop("scrollHeight"));
+             //$('#messages').animate({scrollTop: $('#messages').prop("scrollHeight")});
+          });
+          socket.on('old chat message', function(msg){
+            $('#messages').empty();
+             //console.log(msg);
+
+             for(var i=0;i<msg.result.length;i++){
+               if(msg.result[i].To == userName){
+                  //var msg = '<li style=" float : right; ">'+msg.result[i].userName+" : "+msg.result[i].chatmessage+'</li>'
+                  var chatDate = moment(msg.result[i].date).format("MMMM Do YYYY, hh:mm:ss a");
+                 var txt1 = $('<span></span>').text(msg.result[i].userName+" : ").css({"color":"#006080"});
+                 var txt2 = $('<span></span>').text(chatDate).css({"float":"right","color":"#a6a6a6","font-size":"16px"});
+                 var txt3 = $('<p></p>').append(txt1,txt2);
+                 var txt4 = $('<p></p>').text(msg.result[i].chatmessage).css({"color":"#000000"});
+               }else{
+                 var chatDate = moment(msg.result[i].date).format("MMMM Do YYYY, hh:mm:ss a");
+                var txt1 = $('<span></span>').text(msg.result[i].userName+" : ").css({"color":"#006080"});
+                var txt2 = $('<span></span>').text(chatDate).css({"float":"right","color":"#a6a6a6","font-size":"16px"});
+                var txt3 = $('<p></p>').append(txt1,txt2);
+                var txt4 = $('<p></p>').text(msg.result[i].chatmessage).css({"color":"#000000"});
+               }
+              $('#messages').append($('<li>').append(txt3,txt4));
+             $('#messages').scrollTop($('#messages').prop("scrollHeight"));
+              //$('#messages').animate({scrollTop: $('#messages').prop("scrollHeight")});
+             }
+
+            });
+      });
+    </script>
+
+  </body>
+</html>
