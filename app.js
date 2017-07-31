@@ -43,7 +43,7 @@ app.set('view engine','jade');
 app.set('views',path.join(__dirname + '/app/views'));
 app.use(cookieParser());
 
-var nodemailer = require('nodemailer');
+//var nodemailer = require('nodemailer');
 
 var dbPath = "mongodb://localhost/chatapp";
 

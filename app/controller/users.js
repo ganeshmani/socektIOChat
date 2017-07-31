@@ -14,7 +14,7 @@ var responseGenerator = require('./../../libs/generateResponse.js');
 var passport = require('passport');
 var Strategy = require('passport-facebook').Strategy;
 
-var nodemailer = require('nodemailer');
+//var nodemailer = require('nodemailer');
 
 var auth = require('./../../middlewares/auth');
 
