@@ -45,7 +45,7 @@ app.use(cookieParser());
 
 //var nodemailer = require('nodemailer');
 
-var dbPath = "mongodb://localhost/chatapp";
+var dbPath = "mongodb://http://ec2-13-58-234-143.us-east-2.compute.amazonaws.com/chatapp";
 
 app.use(session);
 //io.use(sharedsession(session));
